@@ -1,0 +1,382 @@
+一、Linux是一种操作系统!!
+
+操作系统：一堆软件的集合，让计算机硬件正常的工作
+
+Unix/Linux发展史
+
+• UNIX诞生，1970-1-1
+
+Linux的诞生
+• Linux之父,Linus Torwalds
+– 1991年10月,发布0.02版(第一个公开版)内核
+– 1994年03月,发布1.0版内核
+– 标准读音:“哩呐科斯
+
+           用户 -------》内核------》硬件
+
+– 版本号:主版本.次版本.修订号
+
+Linux发行版本
+• 发行版的名称/版本由发行方决定
+– Red Hat Enterprise Linux 5/6/7
+– Suse Linux Enterprise 12
+– Debian Linux 7.8
+– Ubuntu Linux 14.10/15.04
+
+Red Hat系列版本                                            
+• 红帽 Linux 企业版
+– 简称RHEL(Red Hat Enterprise Linux)
+– http://www.redhat.com/
+
+• Fedora Core 社区版
+– http://fedoraproject.org/
+
+• CentOS,社区企业操作系统
+– Community Enterprise Operating System
+– http://www.centos.org/
+
+ root用户为Linux最高权限的用户
+######################################################
+安装Linux系统
+1.安装CentOS 7.5版本，光盘镜像文件  CentOS7-1804.iso
+2.安装CentOS 7,需要的内存至少2G
+
+ Ctrl+ALT = 鼠标回到真机
+
+######################################################
+Linux目录结构，树型结构                             
+  哲学思想：一切皆文件
+
+   / 根目录： Linux所有数据都在此目录下，Linux系统的起点
+  /dev: 存放设备（键盘、鼠标、光驱设备.......）相关的数据
+
+    路径：/dev/abc/1.txt
+
+Linux硬盘的表示方法
+   IDE：/dev/hd
+   SCSI：/dev/sd
+
+ /dev/hda : IDE接口的第一块硬盘
+ /dev/hdb : IDE接口的第二块硬盘
+ /dev/hdc : IDE接口的第三块硬盘
+ /dev/hdd : IDE接口的第四块硬盘
+
+ /dev/sda : SCSI接口的第一块硬盘
+ /dev/sdb : SCSI接口的第二块硬盘
+ /dev/sdc : SCSI接口的第三块硬盘
+ /dev/sdd : SCSI接口的第四块硬盘
+######################################################
+点击“未列出”---》利用root用户进行登陆操作系统
+
+
+获取命令行界面
+• 虚拟控制台切换( Ctrl + Alt + Fn 组合键)
+– tty1:图形桌面
+– tty2~tty6:字符控制台
+
+• 右键空白处----》“打开终端”
+
+补充:快捷键
+  Ctrl  Shift  + = 变大
+  Ctrl   -  =  变小
+
+
+#######################################################
+命令行提示符：
+   [当前系统登陆的用户名@系统主机名  当前所在目录]#
+  
+    以#结尾表示当前身份为超级管理员root
+    以$结尾表示当前身份为普通用户
+
+#####################################################
+查看与修改主机名：hostname
+[root@localhost ~]# hostname                   #查看主机名
+[root@localhost ~]# hostname hahaxixihehelele  #设置主机名
+[root@localhost ~]# hostname
+
+[root@localhost ~]# exit
+
+开启一个新的终端
+[root@hahaxixihehelele ~]# hostname A.tedu.cn  #设置主机名
+[root@hahaxixihehelele ~]# hostname            #查看主机名
+[root@hahaxixihehelele ~]# exit
+
+开启一个新的终端
+[root@A ~]# 
+
+###################################################
+查看及切换目录
+• pwd — Print Working Directory
+– 用途:查看当前工作目录，当前所在的路径
+
+• cd — Change Directory
+– 用途:切换工作目录
+– 格式:cd [目标文件夹位置]
+
+• ls — List
+– 格式:ls [选项]... [目录或文件名]...
+
+[root@A ~]# pwd                #显示当前所在的路径
+[root@A ~]# cd  /              #切换到根目录下
+[root@A /]# pwd
+[root@A /]# ls           #查看当前路径下所有内容
+ 
+[root@A /]# cd   /boot    #切换到/boot目录下
+[root@A boot]# pwd        #显示当前所在的路径
+[root@A boot]# ls        #查看当前路径下所有内容
+
+[root@A boot]# cd /opt
+[root@A opt]# pwd
+[root@A opt]# ls
+
+[root@A opt]# cd /root
+[root@A ~]# pwd
+[root@A ~]# ls
+  
+  蓝色：目录
+  文件：黑色
+
+[root@A opt]# pwd
+/opt
+[root@A opt]# ls
+rh
+[root@A opt]# ls /root
+
+[root@A opt]# ls /boot/
+
+
+cat命令查看文本文件内容
+[root@A opt]# cd /root/
+[root@A ~]# pwd
+[root@A ~]# ls
+[root@A ~]# cat /root/anaconda-ks.cfg
+
+[root@A ~]# cat /etc/shells 
+[root@A ~]# cat /etc/passwd
+[root@A ~]# cat /etc/fstab
+[root@A ~]# cat /etc/group
+
+[root@A ~]# cat /etc/redhat-release  #查看当前系统的版本
+CentOS Linux release 7.5.1804 (Core) 
+
+####################################################
+绝对路径：以 / 开始的路径
+相对路径：以当前路径为参照的路径
+
+[root@A ~]# cd /etc/pki/
+[root@A pki]# ls
+[root@A pki]# cd /etc/pki/CA    #利用绝对路径
+[root@A CA]# pwd
+
+[root@A CA]# cd /etc/pki/
+[root@A pki]# pwd
+[root@A pki]# ls
+[root@A pki]# cd CA      #利用相对路径
+[root@A CA]# pwd
+
+   .. 表示父目录，上一级目录                   
+
+[root@A /]# cd  /etc/pki/
+[root@A pki]# pwd
+/etc/pki
+[root@A pki]# cd  ..    #返回上一级目录
+[root@A etc]# pwd
+/etc
+[root@A etc]# cd  ..  #返回上一级目录
+[root@A /]# pwd
+/
+[root@A /]# cd  ..  #返回上一级目录
+[root@A /]# pwd
+/
+[root@A /]# 
+#####################################################
+真机查看CPU和内存
+• 列出CPU处理器信息
+[student@room9pc01 ~]$ lscpu   
+.........
+CPU(s):                4   #CPU核心数
+.........
+型号名称：        Intel(R) Core(TM) i5-4430S CPU @ 2.70GHz
+.........
+
+• 列出内存信息
+[student@room9pc01 ~]$ cat /proc/meminfo 
+MemTotal:       16330728 kB    #一共多少内存
+
+    容量单位： EB     #进行百度
+
+ 1TB = 1024GB
+ 1PB = 1024TB
+ 1EB = 1024PB
+
+##################################################
+查看IP地址信息
+[root@A /]# ifconfig
+eth0:   #第一张网卡
+
+lo: ip地址永远为127.0.0.1      #本地回环接口，专门用于测试
+  
+   127.0.0.1      #永远代表本机
+
+[root@A /]#  ping 127.0.0.1
+  Ctrl +c = 结束正在运行的命令
+
+[root@A /]# ifconfig eth0 192.168.1.1  #临时设置IP地址
+[root@A /]# ifconfig 
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.1  netmask 255.255.255.0 
+[root@A /]# ifconfig
+#####################################################
+重起系统：reboot
+
+[root@localhost ~]# hostname   #查看主机名
+
+[root@localhost ~]# ifconfig   #查看IP地址
+
+#######################################################
+主机名与IP地址永久设置
+
+一、主机名永久设置
+[root@localhost ~]#  nmtui     #建议字体小一些
+设置系统主机名-->输入新的名字-->确定（回车）--> 确定（回车）
+
+[root@localhost ~]#  hostname
+
+ 新开一个终端，进行验证提示符
+
+二、IP地址永久设置                                  
+[root@NSD ~]#　nmtui
+　编辑连接 -->eth0-->编辑ipv4-->将自动修改手动-->显示
+
+　-->按空格　勾选　自动连接    　    #每次开机自动生效
+　-->按空格　勾选　对所有用户有效  
+[root@NSD ~]# ifconfig 
+
+修改IP地址为192.168.1.10/24
+[root@NSD ~]#　nmtui
+激活配置
+[root@NSD ~]#　nmtui
+　启用连接 -->eth0-->敲回车　禁用-->敲回车　激活
+　最终eth0前面有一个＊代表激活状态
+[root@NSD ~]# ifconfig 
+
+#####################################################
+
+• mkdir — Make Directory
+– 格式:mkdir  [/路径/]目录名...
+
+[root@NSD ~]# mkdir /opt/nsd01
+[root@NSD ~]# ls /opt/
+
+[root@NSD ~]# mkdir /root/nsd02  /mnt/nsd03
+[root@NSD ~]# ls /root/
+[root@NSD ~]# ls /mnt/
+
+[root@NSD ~]# mkdir haha    #当前路径下创建
+[root@NSD ~]# pwd
+[root@NSD ~]# ls
+
+• touch命令
+– 用途:新建空文件
+– 格式:touch 文件名...
+[root@NSD /]# touch /root/1.txt  /mnt/2.txt
+[root@NSD /]# ls /root/
+[root@NSD /]# ls /mnt/
+
+[root@NSD /]# touch xixi.txt
+[root@NSD /]# pwd
+[root@NSD /]# ls
+
+[root@NSD /]# cd /opt/
+[root@NSD opt]# touch hehe.txt
+[root@NSD opt]# ls
+
+#####################################################
+文本内容操作
+• less分屏阅读工具
+• 格式:less [选项] 文件名...
+
+– 优势:支持前后翻页
+• 基本交互操作
+– 按 / 键向后查找(n、N切换)
+
+[root@NSD /]# less /etc/passwd
+      按 上 下键进行滚动
+      输入  /a     #全文查找a，  n、N切换匹配的项
+      按   q  退出
+####################################################  
+
+• head、tail 命令
+– 格式:
+  head -n 数字 文件名
+  tail -n 数字 文件名
+
+[root@NSD /]# head -1 /etc/passwd   #显示文件内容的第一行内容
+[root@NSD /]# head -2 /etc/passwd   #显示文件头2行内容
+
+[root@NSD /]# tail -1 /etc/passwd
+[root@NSD /]# tail -2 /etc/passwd
+
+[root@NSD /]# head  /etc/passwd   #默认显示头10行
+[root@NSD /]# tail  /etc/passwd   #默认显示尾10行
+
+#####################################################
+• grep工具                                                 
+– 用途:输出包含指定字符串的行
+– 格式:grep  '查找条件'   目标文件
+
+[root@NSD /]# grep  root  /etc/passwd
+
+[root@NSD /]# grep  bash  /etc/passwd
+
+[root@NSD /]# grep  sbin  /etc/passwd
+
+####################################################
+vim文本编辑器
+三个模式： 命令模式      插入模式（输入模式）      末行模式
+
+当文件不存在的时候，会自动创建
+[root@NSD /]# vim /opt/lele.txt
+
+	命------- i 或 o ----》插入模式（输入模式）按Esc回到命令模式
+	令
+	模
+	式-------  ：冒号 --------》 末行模式（按Esc回到命令模式）
+
+  末行模式  输入  ：wq   #保存并退出
+  末行模式  输入  ：q！  #强制不保存并退出
+
+###################################################
+关机：poweroff
+
+#####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

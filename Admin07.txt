@@ -1,0 +1,405 @@
+教学环境
+
+真机：使用rht-vmctl辅助工具
+• 控制教学用虚拟机
+– 格式:rht-vmctl 控制指令 虚拟机名
+
+– 常用控制指令: reset(还原)
+]# rht-vmctl reset classroom  #先重置资源服务器
+]# rht-vmctl reset server     #再重置练习虚拟机
+]# rht-vmctl reset desktop    #再重置练习虚拟机
+#########################################################
+为虚拟机server图形添加一块新的80G硬盘
+[root@server0 ~]# lsblk 
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  10G  0 disk 
+└─vda1 253:1    0  10G  0 part /
+vdb    253:16   0  10G  0 disk 
+vdc    253:32   0  80G  0 disk 
+
+进行/dev/vdc综合分区，划分三个主分区分别为10G，划分三个逻辑分区分为10G
+[root@server0 ~]# fdisk /dev/vdc
+   p 查看分区表
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+   p 查看分区表
+   n 创建扩展分区 
+          ----->回车---->起始回车----->结束回车   将所有空间给扩展分区
+   p 查看分区表
+   n 创建逻辑分区----->起始回车------>结束+10G
+   n 创建逻辑分区----->起始回车------>结束+10G
+   p 查看分区表
+   w 保存并退出
+[root@server0 ~]# lsblk
+
+###########################################################
+逻辑卷
+  1.整合分散的空间     2.逻辑卷空间可以扩大
+  – 零散空闲存储 ---- 整合的虚拟磁盘 ---- 虚拟的分区
+  将众多的pv（物理卷），组建成vg（卷组），然后再从卷组中划分lv（逻辑卷）
+
+一、制作逻辑卷
+
+successfully 成功
+
+1.创建卷组
+  格式：vgcreate 卷组名     设备路径......
+[root@server0 ~]# vgcreate systemvg /dev/vdb /dev/vdc1
+  Physical volume "/dev/vdb" successfully created
+  Physical volume "/dev/vdc1" successfully created
+  Volume group "systemvg" successfully created
+
+[root@server0 ~]# pvs    #查看物理卷信息                
+[root@server0 ~]# vgs    #查看卷组信息
+LVM管理工具集
+	功能 		物理卷管理 	卷组管理 		逻辑卷管理
+	Scan 扫描 	pvscan 		vgscan 		lvscan
+	Create 创建 	pvcreate 	vgcreate 	lvcreate
+	Display 显示	 pvdisplay 	vgdisplay 	lvdisplay
+	Remove 删除	 pvremove 	vgremove 	lvremove
+	Extend 扩展 		/	 	vgextend 	lvextend
+
+2.创建逻辑卷
+  格式：lvcreate -L 逻辑卷的大小   -n 逻辑卷名字    卷组名 
+
+[root@server0 ~]# vgs    #显示卷组信息
+[root@server0 ~]# lvcreate -L 16G -n mylv systemvg 
+  Logical volume "mylv" created
+
+[root@server0 ~]# vgs  #显示卷组信息
+[root@server0 ~]# lvs  #显示逻辑卷信息
+
+3.逻辑卷的使用
+[root@server0 ~]# ls /dev/systemvg/mylv 
+[root@server0 ~]# ls -l /dev/systemvg/mylv
+
+[root@server0 ~]# mkfs.xfs /dev/systemvg/mylv  #格式化文件系统
+[root@server0 ~]# blkid /dev/systemvg/mylv   #查看文件系统
+[root@server0 ~]# vim /etc/fstab 
+/dev/systemvg/mylv  /nsd  xfs  defaults  0 0
+
+[root@server0 ~]# mkdir /nsd
+[root@server0 ~]# mount -a    #检测/etc/fstab是否书写正确
+[root@server0 ~]# df -h
+
+#########################################################
+二、逻辑卷的扩展
+1.卷组有足够的剩余空间
+  1)空间扩展
+[root@server0 ~]# lvs                                          
+[root@server0 ~]# vgs
+[root@server0 ~]# lvextend -L 18G /dev/systemvg/mylv 
+  Extending logical volume mylv to 18.00 GiB
+  Logical volume mylv successfully resized
+[root@server0 ~]# lvs
+
+  2)文件系统的扩展（刷新文件系统）
+       xfs文件系统的扩展：xfs_growfs 
+       ext4文件系统的扩展：resize2fs 
+[root@server0 ~]# df -h | tail -1
+[root@server0 ~]# xfs_growfs   /dev/systemvg/mylv 
+[root@server0 ~]# df -h | tail -1
+
+2.卷组没有足够的剩余空间                                   
+ 1)扩展卷组大小
+[root@server0 ~]# vgs
+[root@server0 ~]# vgextend systemvg /dev/vdc2
+[root@server0 ~]# vgs
+
+[root@server0 ~]# vgextend systemvg /dev/vdc3
+[root@server0 ~]# vgs
+  2)逻辑卷空间扩展
+[root@server0 ~]# lvs                                          
+[root@server0 ~]# vgs
+[root@server0 ~]# lvextend -L 25G /dev/systemvg/mylv 
+[root@server0 ~]# lvs
+
+  3)逻辑卷文件系统的扩展（刷新文件系统）
+[root@server0 ~]# df -h | tail -1
+[root@server0 ~]# xfs_growfs   /dev/systemvg/mylv 
+[root@server0 ~]# df -h | tail -1
+########################################################
+了解：逻辑卷也可以缩减
+########################################################
+卷组划分空间单位：PE
+[root@server0 ~]# vgdisplay  systemvg   #显示卷组详细信息
+ PE Size               4.00 MiB
+
+
+请划分一个250M逻辑卷，名称为redhat
+[root@server0 ~]# vgchange -s 1M systemvg       #修改PE的大小
+  Volume group "systemvg" successfully changed
+
+[root@server0 ~]# vgdisplay      #查看卷组详细信息
+[root@server0 ~]# lvcreate -L 250M -n redhat systemvg 
+[root@server0 ~]# lvs
+
+请划分一个 500个PE组成的逻辑卷，名称为xixi
+[root@server0 ~]# lvcreate -l 500 -n xixi systemvg
+  Logical volume "xixi" created
+[root@server0 ~]# lvs
+
+######################################################
+逻辑卷删除：
+   首先删除逻辑卷，然后再删除卷组
+[root@server0 ~]# lvremove /dev/systemvg/redhat 
+Do you really want to remove active logical volume redhat? [y/n]: y
+  Logical volume "redhat" successfully removed
+[root@server0 ~]# lvs
+
+######################################################
+升级内核
+
+1.下载一个新的内核软件
+[root@server0 ~]# wget http://classroom.example.com/content/rhel7.0/x86_64/errata/Packages/kernel-3.10.0-123.1.2.el7.x86_64.rpm
+
+[root@server0 ~]# ls
+
+2.安装新的内核
+]# uname -r   #查看内核版本
+
+]# rpm -ivh /root/kernel-3.10.0-123.1.2.el7.x86_64.rpm 
+
+[root@server0 ~]# uname -r
+[root@server0 ~]# reboot 
+
+[student@room9pc01 ~]$ gos
+
+[root@server0 ~]# uname -r
+3.10.0-123.1.2.el7.x86_64
+[root@server0 ~]# 
+
+########################################################
+find高级使用
+查找文件
+• 根据预设的条件递归查找对应的文件
+– find [目录] [条件1] [-a|-o] [条件2] ...
+– 常用条件表示:
+ -type 类型(f 文本文件、d 目录、l 快捷方式)
+ -name "文档名称"
+ -size +|-文件大小(k、M、G)
+ -user 用户名
+ -mtime 根据文件修改时间
+
+
+ -type 类型(f 文本文件、d 目录、l 快捷方式)
+
+[root@server0 ~]# find /boot/ -type l
+[root@server0 ~]# ls /boot/grub/menu.lst 
+[root@server0 ~]# ls -l /boot/grub/menu.lst
+
+[root@server0 ~]# find /boot/ -type d
+
+[root@server0 ~]# find /boot/ -type f
+
+[root@server0 ~]# find /root -type d
+
+[root@server0 ~]# find /root -type f
+
+#########################################################
+ -name  "文档名称"
+
+[root@server0 ~]# find /etc/  -name  "passwd"
+[root@server0 ~]# find /etc/  -name  "fstab"
+
+[root@server0 ~]# find /etc/  -name  "*tab"
+[root@server0 ~]# find /etc/  -name  "*tab*"
+
+[root@server0 ~]# mkdir /root/nsd1910
+[root@server0 ~]# touch /root/nsd01.txt
+[root@server0 ~]# touch /root/nsd02.txt
+[root@server0 ~]# find /root/   -type  f   -name  "nsd*"
+
+[root@server0 ~]# find /root/  -name  "nsd*"
+[root@server0 ~]# find /root/  -name  "nsd*"  -type d
+
+满足条件的其中一个
+[root@server0 ~]# find /root/ -name "nsd*" -o -type  d
+
+#####################################################
+ -size + 或 -  文件大小(k、M、G)
+ -user 用户名      #查找数据的所有者
+
+[root@server0 ~]# find /boot/ -size +10M   #大于10M
+[root@server0 ~]# find /boot/ -size -10M   #小于10M
+
+[root@server0 ~]# find /home/  -user student
+[root@server0 ~]# find  /  -user  student
+
+  /proc:不占用硬盘空间，占用内存空间
+
+########################################################
+ -mtime 根据文件修改时间,出现的时间都是过去时间           
+      
+ -mtime  +10  #10天之前创建或修改的数据
+ -mtime  -10  #最近10天之内创建或修改的数据
+
+[root@server0 ~]# find /root/ -mtime  +1000
+
+[root@server0 ~]# find /root/ -mtime  -10
+
+[root@server0 ~]# date  #查看当前系统时间
+
+    3个月之前的数据
+[root@server0 ~]# find /root/ -mtime  +90
+######################################################
+处理find查找到的数据
+ -exec   #额外操作的开始
+  {}     #代表find查询的结果
+  \;    #额外操作的结束
+
+]# find  /etc/  -name  "*tab"
+]# find  /etc/  -name  "*tab"    -exec   cp  {}  /opt  \;
+]# ls /opt/
+
+]# find  /boot/  -size  +10M
+]# find  /boot/  -size  +10M   -exec   cp   {}   /opt/  \;
+]# ls /opt/
+
+案例4:查找并处理文件
+• 使用find命令完成以下任务
+– 找出所有用户 student 拥有的文件
+– 把它们拷贝到 /root/findfiles/ 文件夹中
+
+   文档：文件和目录都包括
+
+]# mkdir /root/findfiles
+]# find / -user student -type f 
+
+]# find / -user student -type f  -exec cp {} /root/findfiles/  \;
+
+]# ls /root/findfiles/
+]# ls -A /root/findfiles/
+
+#########################################################
+grep 文本文件内容中，过滤包含指定字符串的行
+
+[root@server0 ~]# grep root  /etc/passwd  #包含root的行
+[root@server0 ~]# grep ^root /etc/passwd  #必须以root开头的行
+[root@server0 ~]# grep bash$ /etc/passwd  #必须以bash结尾的行
+
+[root@server0 ~]# grep -v root /etc/passwd  #不包含root的行
+
+ 在Linux系统中大多数配置文件，以#开头的行为注释行   
+
+  ^$ :匹配空行
+
+显示文件的有效信息（去除空行，去除注释行）
+]# grep -v ^# /etc/default/useradd 
+]# grep -v ^# /etc/default/useradd    |   grep  -v  ^$
+
+]# grep -v ^# /etc/login.defs
+]# grep -v ^# /etc/login.defs |  grep    -v   ^$
+
+]# grep -v ^# /etc/login.defs  |  grep  -v  ^$   >  /opt/b.txt
+]# cat /opt/b.txt
+
+##########################################################
+acl策略的作用
+• 文档归属的局限性
+– 任何人只属于三种角色:属主、属组、其他人
+– 无法实现更精细的控制
+
+• acl访问策略
+– 能够对个别用户、个别组设置独立的权限
+– 大多数挂载的EXT3/4、XFS文件系统默认已支持
+
+
+[root@server0 ~]# mkdir /nsd02
+[root@server0 ~]# chmod o=--- /nsd02
+[root@server0 ~]# ls -ld /nsd02
+
+[root@server0 ~]# su - zhangsan
+[zhangsan@server0 ~]$ cd /nsd02
+-bash: cd: /nsd02: Permission denied
+[zhangsan@server0 ~]$ exit
+logout
+[root@server0 ~]# setfacl -m u:zhangsan:rx /nsd02  #修改ACL策略
+[root@server0 ~]# getfacl /nsd02    #查看ACL策略
+
+[root@server0 ~]# su - zhangsan
+[zhangsan@server0 ~]$ cd /nsd02
+[zhangsan@server0 nsd02]$ pwd
+[zhangsan@server0 nsd02]$ exit
+[root@server0 ~]# 
+
+为lisi设置权限，使得lisi可以查看/etc/shadow文件内容，您有几种办法？
+  1.利用其他人
+      chmod  o+r /etc/shadow
+  2.利用所属组
+      chown :lisi  /etc/shadow
+      chmod  g+r /etc/shadow
+  3.利用所有者
+      chown  lisi  /etc/shadow
+      chmod  u+r /etc/shadow
+  4.利用ACL策略
+      setfacl  -m  u:lisi:r  /etc/shadow 
+
+##########################################################
+
+• 使用 getfacl、setfacl 命令
+– getfacl 文档...
+– setfacl [-R] -m u:用户名:权限类别 文档...
+– setfacl [-R] -m g:组名:权限类别 文档...
+
+– setfacl [-R] -x  u:用户名    文档...       #删除指定的ACL策略
+– setfacl [-R] -b   文档...       #删除所有的ACL策略
+
+   [-R]:递归设置ACL策略
+
+[root@server0 ~]# mkdir /nsd03                       
+[root@server0 ~]# setfacl -m u:zhangsan:rwx /nsd03
+[root@server0 ~]# setfacl -m u:student:rx /nsd03
+[root@server0 ~]# setfacl -m u:dc:rwx /nsd03
+[root@server0 ~]# setfacl -m u:lisi:rx /nsd03
+
+[root@server0 ~]# getfacl /nsd03
+
+[root@server0 ~]# setfacl -x u:dc  /nsd03  #仅删除dc用户的ACL
+[root@server0 ~]# getfacl /nsd03
+
+[root@server0 ~]# setfacl -x u:zhangsan /nsd03
+[root@server0 ~]# getfacl /nsd03
+
+[root@server0 ~]# setfacl -b /nsd03  #删除所有用户的ACL
+[root@server0 ~]# getfacl /nsd03
+##########################################################
+了解：ACL策略单独拒绝一个用户（将一个用户加入黑名单）
+
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# chmod ugo=rwx  /public
+[root@server0 ~]# ls -ld /public
+
+[root@server0 ~]# setfacl -m u:zhangsan:--- /public
+[root@server0 ~]# getfacl /public
+
+#########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
