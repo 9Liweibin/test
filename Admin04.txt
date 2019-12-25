@@ -1,0 +1,360 @@
+只有目录的后面才能够有  /  结尾，文件必须没有 / 结尾
+
+两次复制的不同
+[root@NSD /]# ls /opt/
+[root@NSD /]# cp -r /home/  /opt/abc
+                  #将/home目录复制到/opt目录下重命名为abc
+
+[root@NSD /]# ls /opt/
+abc
+[root@NSD /]# cp -r /home/  /opt/abc
+                  #将/home目录复制到/opt/abc目录下
+
+[root@NSD /]# ls /opt/
+
+#####################################################
+管理用户和组
+
+     用户: 1.可以登陆操作系统   2.不同用户权限不同
+     组：方便管理用户
+
+     唯一标识： UID    GID
+
+     管理员root的UID为0
+
+     组：基本组    附加组（从属组）
+     一个用户至少属于一个组
+
+[root@NSD /]# useradd  zhangsan
+ 
+     组：zhangsan                  #基本组
+ 
+     组：xiaoshou   caiwu   jishu      #附加组
+
+
+######################################################
+重定向输出：将前面命令的输出结果，作为内容写入到文本文件中
+ 
+  >:覆盖重定向
+  >>:追加重定向
+[root@NSD /]# cat --help
+[root@NSD /]# cat --help  >  /opt/cat.txt
+[root@NSD /]# ls /opt/
+[root@NSD /]# cat /opt/cat.txt 
+
+[root@NSD /]# hostname
+[root@NSD /]# hostname > /opt/cat.txt 
+[root@NSD /]# cat /opt/cat.txt
+
+[root@NSD /]# hostname >> /opt/cat.txt 
+[root@NSD /]# ifconfig >> /opt/cat.txt
+[root@NSD /]# cat /opt/cat.txt
+
+
+[root@NSD /]# echo 123456                    
+[root@NSD /]# echo 123456 > /opt/cat.txt 
+[root@NSD /]# cat /opt/cat.txt
+
+[root@NSD /]# echo hello
+[root@NSD /]# echo hello  >> /opt/cat.txt
+[root@NSD /]# cat /opt/cat.txt
+
+[root@NSD /]# echo haha xixi
+[root@NSD /]# echo haha xixi  >> /opt/cat.txt
+[root@NSD /]# cat /opt/cat.txt
+
+#################################################
+  |   管道操作：将前面命令的输出，作为参数传递给后面命令继续处理
+
+显示/etc/passwd的8-12行内容
+[root@NSD /]# head -12 /etc/passwd  |  tail -5 
+
+[root@NSD /]# head -12 /etc/passwd  |  tail -5  | cat  -n
+
+[root@NSD /]# cat -n /etc/passwd |  head -12 | tail -5
+
+[root@NSD /]# ifconfig | less
+
+[root@NSD /]# ifconfig | head -2
+
+####################################################
+添加用户
+用户基本信息存放在 /etc/passwd 文件
+[root@NSD /]# head -1 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+用户名:密码占位符:UID:基本组的GID:用户描述信息:家目录:解释器
+
+• 使用 useradd 命令
+– useradd [选项]... 用户名
+
+• 常用命令选项
+– -u 用户id、-d 家目录路径、-s 登录解释器、-G 附加组     
+
+[root@NSD /]# useradd nsd01
+[root@NSD /]# id nsd01               #查看用户基本信息
+
+[root@NSD /]# useradd -u 1500 nsd04  #指定用户的UID进行创建
+[root@NSD /]# id nsd04
+
+[root@NSD /]# useradd nsd05
+[root@NSD /]# id nsd05
+
+[root@NSD /]# useradd -d /opt/nsd06    nsd06  #指定用户家目录
+[root@NSD /]# ls /opt/
+
+[root@NSD /]# useradd -d /opt/nsd07    nsd07
+[root@NSD /]# ls /opt/
+
+-s 登录解释器
+    /sbin/nologin：禁止用户登陆操作系统
+
+[root@NSD /]# useradd -s /sbin/nologin nsd08
+[root@NSD /]# grep nsd08  /etc/passwd
+
+用户名:密码占位符:UID:基本组的GID:用户描述信息:家目录:解释器
+
+-G 附加组     
+[root@NSD /]# groupadd   stugrp          #创建stugrp组 
+[root@NSD /]# useradd  -G stugrp  nsd09
+[root@NSD /]# id nsd09
+
+[root@NSD /]# useradd  -G stugrp  nsd10
+[root@NSD /]# id nsd10
+
+#####################################################
+修改用户属性命令 usermod
+
+• 常用命令选项
+– -u 用户id、-d 家目录路径、-s 登录解释器、-G 附加组     
+[root@NSD /]# useradd  nsd11
+[root@NSD /]# id nsd11
+[root@NSD /]# grep nsd11 /etc/passwd
+
+[root@NSD /]# usermod -u 1600 -d /opt/abc nsd11
+[root@NSD /]# grep nsd11 /etc/passwd
+
+[root@NSD /]# usermod  -s /sbin/nologin -G stugrp  nsd11
+[root@NSD /]# grep nsd11 /etc/passwd
+[root@NSD /]# id nsd11
+
+#######################################################
+设置登录密码
+
+• 使用 passwd 命令
+– passwd [用户名]
+
+[root@NSD /]# passwd  nsd01
+更改用户 nsd01 的密码 。
+新的 密码：
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：
+passwd：所有的身份验证令牌已经成功更新。
+
+[root@NSD /]# passwd  nsd01
+更改用户 nsd01 的密码 。
+新的 密码：
+无效的密码： 密码是一个回文
+重新输入新的 密码：
+passwd：所有的身份验证令牌已经成功更新。
+
+[root@NSD /]# su - nsd01    #临时切换用户身份
+[nsd01@NSD ~]$ passwd 
+更改用户 nsd01 的密码 。
+为 nsd01 更改 STRESS 密码。
+（当前）UNIX 密码：                 #输入旧密码    
+新的 密码：                                #新的 密码
+重新输入新的 密码：                   #重复输入一遍，新的 密码
+passwd：所有的身份验证令牌已经成功更新。
+[nsd01@NSD ~]$ exit   #退出
+
+####################################################
+非交互式设置密码
+[root@NSD /]# echo 123456 | passwd --stdin nsd01
+
+[root@NSD /]# echo redhat | passwd --stdin nsd01
+
+[root@NSD /]# echo hello | passwd --stdin nsd01
+
+##################################################
+用户密码信息存放在 /etc/shadow 文件
+[root@NSD /]# grep nsd01 /etc/shadow
+nsd01:$6$O5FLAXH0$eyMrrroedSqBgPoSgVU92x9OOcH3/XP.N2d3NaknjwjLggV12hHNqvZjTzR12ieVMG4/iKl8tcgV/brI6X4ZC.:18204:0:99999:7:::
+
+用户名:密码加密字符串:上一次修改密码的时间
+
+  自1970-1-1到达上一次修改密码的时间，所经历的天数
+
+####################################################
+检查用户ID信息
+• 使用 id 命令
+– id 用户名
+
+
+删除用户
+• 使用 userdel 命令
+– userdel [-r] 用户名
+   [-r]：递归删除，连同用户家目录一并删除
+
+[root@NSD /]# userdel  lisi            
+[root@NSD /]# id  lisi
+id: lisi: no such user
+[root@NSD /]# ls  /home/
+
+[root@NSD /]# userdel  -r  nsd01
+[root@NSD /]# id   nsd01
+[root@NSD /]# ls  /home/
+
+##################################################
+管理组账号
+
+添加组
+组基本信息存放在 /etc/group 文件
+ [root@NSD /]# grep nsd1910 /etc/group
+ nsd1910:x:1603:
+  组名：组密码占位符：GID:成员列表
+
+• 使用 groupadd 命令
+– groupadd [-g 组ID] 组名
+
+[root@NSD /]# groupadd  nsd1910
+[root@NSD /]# grep nsd1910 /etc/group
+nsd1910:x:1603:
+[root@NSD /]# useradd jack
+[root@NSD /]# useradd kaka
+[root@NSD /]# useradd dcc
+[root@NSD /]# useradd ch
+
+管理组成员
+• 使用 gpasswd 命令
+– gpasswd -a 用户名 组名
+– gpasswd -d 用户名 组名
+
+[root@NSD /]# gpasswd -a ch nsd1910     #用户加入组
+[root@NSD /]# grep nsd1910 /etc/group
+
+[root@NSD /]# gpasswd -a kaka nsd1910   #用户加入组
+[root@NSD /]# grep nsd1910 /etc/group
+
+[root@NSD /]# gpasswd -d ch nsd1910     #将用户从组中删除
+[root@NSD /]# grep nsd1910 /etc/group
+
+[root@NSD /]# gpasswd -a jack nsd1910   #用户加入组
+[root@NSD /]# grep nsd1910 /etc/group
+
+[root@NSD /]# gpasswd -d kaka nsd1910   将用户从组中删除
+[root@NSD /]# grep nsd1910 /etc/group
+
+#######################################################
+删除组
+• 使用 groupdel 命令
+– groupdel 组名
+ 不允许删除用户的基本组
+
+[root@NSD /]# groupdel nsd1910
+
+#######################################################
+案例1:配置用户和组账号
+• 新建用户 alex,其用户ID为3456,密码是flectrag    
+[root@NSD /]# useradd -u 3456 alex
+[root@NSD /]# id alex
+[root@NSD /]# echo flectrag  | passwd --stdin alex
+• 新建一个名为 adminuser 的组
+[root@NSD /]# groupadd adminuser
+• 新建名为 natasha 的用户,其属于 adminuser 组,这个组是该用户的从属组
+[root@NSD /]# useradd -G adminuser  natasha
+[root@NSD /]# id natasha
+[root@NSD /]# grep adminuser /etc/group
+• 新建名为 harry 的用户,其属于 adminuser 组,这个组是该用户的从属组
+[root@NSD /]# gpasswd -a harry adminuser
+[root@NSD /]# id harry
+• 新建名为 sarah 的用户,其在系统中没有可交互的Shell,并且不是 adminuser 组的成员
+[root@NSD /]# useradd -s /sbin/nologin sarah
+[root@NSD /]# grep sarah /etc/passwd
+• natasha 、harry、sarah 的密码都要设置为flectrag
+
+########################################################
+tar备份与恢复，制作压缩包
+ 1.整合分散的数据    2.减少数据占用的空间
+   
+归档和压缩
+• 归档的含义
+– 将许多零散的文件整理为一个文件
+– 文件总的大小基本不变
+
+• 压缩的含义
+– 按某种算法减小文件所占用空间的大小
+– 恢复时按对应的逆向算法解压
+
+ Linux常见的压缩格式：
+            gzip -----> .gz          
+            bzip2 -----> .bz2
+            xz   -----> .xz
+
+• tar 集成备份工具
+– -c:创建归档
+– -x:释放归档
+– -f:指定归档文件名称，必须放在所有选项的最后
+– -z、-j、-J:调用 .gz、.bz2、.xz 格式的工具进行处理
+– -t:显示归档中的文件清单
+– -C（大写）:指定释放路径
+
+一、制作压缩包（打包）          红色：压缩包
+命令格式： tar   选项      /路径/压缩包名字       /路径/源数据 ........
+]# rm -rf /opt/*
+]# tar -zcf /opt/nsd.tar.gz  /boot/  /home/  /etc/passwd
+]# ls /opt/
+ 	
+]# tar -jcf /opt/file.tar.bz2  /boot/  /home/  /etc/passwd
+]# ls /opt/
+
+]# tar -Jcf /opt/abc.tar.xz  /boot/  /home/   /etc/passwd
+]# ls /opt/
+
+二、解包
+命令格式： tar   选项      /路径/压缩包名字     -C   /释放的路径
+[root@NSD /]# mkdir /nsd10                     
+[root@NSD /]# mkdir /nsd11
+[root@NSD /]# mkdir /nsd12
+[root@NSD /]# tar -xf /opt/nsd.tar.gz  -C  /nsd10
+[root@NSD /]# ls /nsd10/
+[root@NSD /]# ls /nsd10/boot/
+[root@NSD /]# ls /nsd10/etc
+[root@NSD /]# ls /nsd10/home
+
+[root@NSD /]# tar -xf /opt/file.tar.bz2 -C /nsd11
+[root@NSD /]# ls /nsd11/
+[root@NSD /]# ls /nsd11/boot/
+[root@NSD /]# ls /nsd11/etc
+[root@NSD /]# ls /nsd11/home
+
+[root@NSD /]# tar -xf /opt/abc.tar.xz -C /nsd12
+[root@NSD /]# ls /nsd12
+#####################################################
+
+案例2:创建一个备份包
+使用 tar 工具完成以下备份任务:
+– 创建一个名为 /root/backup.tar.bz2 的归档文件
+– 其中包含 /usr/local 目录中的内容
+– tar 归档必须使用 bzip2 进行压缩
+
+[root@NSD /]# tar -jcf /root/backup.tar.bz2 /usr/local/
+[root@NSD /]# ls /root/
+
+[root@NSD /]# tar -tf /root/backup.tar.bz2   #查看tar包内容
+
+########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
